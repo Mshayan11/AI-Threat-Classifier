@@ -1,0 +1,15 @@
+Dec 10 10:01:23 server sshd[1023]: Failed password for invalid user admin from 185.23.44.10 port 55432 ssh2
+Dec 10 10:03:11 server sshd[1024]: Failed password for root from 185.23.44.10 port 55433 ssh2
+Dec 10 10:05:47 host av-engine: Malware detected: Trojan.Generic.123 in file C:\Users\Public\invoice.exe
+Dec 10 10:06:59 gateway firewall: Possible port scan detected from 203.0.113.7 to 10.0.0.20 on 100 ports
+Dec 10 10:09:01 proxy: User clicked on suspected phishing URL http://login-security-check.example.com
+Dec 10 10:11:42 webserver: SQL injection attempt detected in parameter 'id' from 198.51.100.9
+Dec 10 10:13:22 appserver: Cross-site scripting (XSS) attempt in parameter 'comment' from 198.51.100.15
+Dec 10 10:15:00 fileserver: Large outbound transfer detected: 5GB sent from 10.0.0.50 to 203.0.113.99 (possible data exfiltration)
+Dec 10 10:16:30 server sshd[1100]: Accepted password for alice from 10.0.0.25 port 50123 ssh2
+Dec 10 10:17:02 vpn-gateway: Login success for user bob from 198.51.100.42
+Dec 10 10:18:45 host av-engine: Ransomware behavior detected in process C:\Windows\System32\evil.exe
+Dec 10 10:20:11 web-app: Multiple failed login attempts for account 'finance-admin' from 185.23.44.11
+Dec 10 10:22:33 firewall: Portscan activity from 185.23.44.12 against internal host 10.0.0.30 on 200 ports
+Dec 10 10:25:00 mail-gateway: Suspicious attachment blocked: invoice_2025.exe flagged as malware
+2025-12-09T05:25:00Z,10.0.0.8,10.0.0.15,,Virus:DOS/EICAR_Test_File detected on C:\Users\You\Desktop\eicar.com
