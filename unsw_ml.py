@@ -1,13 +1,4 @@
-"""
-unsw_ml.py
 
-Helper functions to use the UNSW-NB15 RandomForest model trained by
-train_unsw_model.py inside the AI Cyber Threat Radar.
-
-- Loads models/unsw_rf_model.joblib lazily (first use).
-- Builds a numeric feature vector for a given log entry.
-- Returns P(attack) as a float in [0, 1], or None if ML can't be used.
-"""
 
 from __future__ import annotations
 
@@ -18,7 +9,6 @@ from typing import Any, Dict, List, Optional
 import joblib
 import numpy as np
 
-# Must match MODEL_BUNDLE_PATH in train_unsw_model.py
 UNSW_MODEL_BUNDLE_PATH = os.path.join("models", "unsw_rf_model.joblib")
 
 
@@ -54,10 +44,9 @@ def _safe_float(value: Any, default: float = 0.0) -> float:
 
 def _build_feature_vector_from_log(log: Any, feature_names: List[str]) -> Optional[np.ndarray]:
     
-    # Example of optional richer mapping based on typical log fields
+
     derived: Dict[str, float] = {}
 
-    # Try using length of message/details as a crude proxy for "payload size".
     msg = getattr(log, "raw", None) or getattr(log, "message", None) or getattr(log, "details", None)
     if isinstance(msg, str):
         msg_len = float(len(msg))
@@ -75,21 +64,15 @@ def _build_feature_vector_from_log(log: Any, feature_names: List[str]) -> Option
     derived.setdefault("sload", msg_len)
     derived.setdefault("dload", 0.0)
 
-    # Build vector in the exact order of feature_names
     vector: List[float] = []
     for name in feature_names:
-        # 1) exact attribute on log
         if hasattr(log, name):
             value = getattr(log, name)
             vector.append(_safe_float(value))
             continue
-
-        # 2) derived mapping if present
         if name in derived:
             vector.append(derived[name])
             continue
-
-        # 3) default fallback
         vector.append(0.0)
 
     return np.array(vector, dtype=float).reshape(1, -1)
@@ -114,3 +97,4 @@ def ml_attack_probability_from_log(log: Any) -> Optional[float]:
     except Exception as exc:  # defensive
         print(f"[UNSW-ML] Prediction failed for log {log}: {exc!r}")
         return None
+
