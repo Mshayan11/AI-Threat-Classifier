@@ -61,5 +61,3 @@ Improve feature engineering and threshold calibration
 Add more datasets and stronger evaluation (cross-validation, drift checks)
 Containerise the app (Docker) for easier deployment
 
-Author
-Muhammad Shayan
