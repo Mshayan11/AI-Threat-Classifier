@@ -1,20 +1,12 @@
-
-
 from __future__ import annotations
-
 import os
-
 import joblib
 import numpy as np
 import pandas as pd
 from lime.lime_tabular import LimeTabularExplainer
-
-# Paths must match train_unsw_model.py and explain_unsw_with_shap.py
 UNSW_CSV_PATH = os.path.join("data", "UNSW-NB15.csv")
 MODEL_BUNDLE_PATH = os.path.join("models", "unsw_rf_model.joblib")
 OUTPUT_DIR = os.path.join("outputs", "lime")
-
-
 def main() -> None:
     if not os.path.exists(MODEL_BUNDLE_PATH):
         raise FileNotFoundError(
@@ -27,13 +19,9 @@ def main() -> None:
             f"UNSW CSV not found at {UNSW_CSV_PATH}. "
             f"Put your UNSW-NB15.csv there or update UNSW_CSV_PATH."
         )
-
-    # Load trained model bundle
     bundle = joblib.load(MODEL_BUNDLE_PATH)
     pipe = bundle["pipeline"]
     feature_names = bundle["feature_names"]
-
-    # Load dataset with SAME options as train_unsw_model.py
     print(f"[LIME] Loading dataset from: {UNSW_CSV_PATH}")
     df = pd.read_csv(
         UNSW_CSV_PATH,
@@ -41,8 +29,6 @@ def main() -> None:
         on_bad_lines="skip",
         engine="python",
     )
-
-    # Sanity check: all features must be present
     missing = [c for c in feature_names if c not in df.columns]
     if missing:
         raise KeyError(
@@ -54,9 +40,7 @@ def main() -> None:
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    # Build LIME explainer on the raw numeric data.
-    # The pipeline (scaler + RF) is used as predict_fn, so LIME sees the same behaviour as the model.
-    explainer = LimeTabularExplainer(
+   explainer = LimeTabularExplainer(
         training_data=X,
         feature_names=feature_names,
         class_names=["benign", "attack"],
@@ -64,10 +48,8 @@ def main() -> None:
         mode="classification",
         verbose=False,
     )
-
-    # Pick a sample that the model is highly confident is an attack
     print("[LIME] Computing model probabilities to pick a strong attack example...")
-    probs = pipe.predict_proba(X)[:, 1]  # P(attack)
+    probs = pipe.predict_proba(X)[:, 1]  
     idx = int(np.argmax(probs))
     x_example = X[idx]
 
@@ -87,3 +69,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
