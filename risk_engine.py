@@ -6,9 +6,8 @@ import os
 import json
 from unsw_ml import ml_attack_probability_from_log
 
-# Robust import: works with both old and new openai package versions
 try:
-    import openai  # type: ignore
+    import openai  
 except ImportError:
     openai = None  
 
@@ -39,7 +38,7 @@ def infer_event_type_from_text(text: str) -> str:
     """
     t = text.lower()
 
-    # HIGH SEVERITY / MALWARE INDICATORS
+    # HIGH SEVERITY 
     if any(k in t for k in [
         "virus:",
         " virus ",
@@ -49,7 +48,7 @@ def infer_event_type_from_text(text: str) -> str:
         "worm ",
         "rootkit",
         "backdoor",
-        "eicar",  # EICAR test file
+        "eicar", 
         "threat detected",
         "threat found",
         "detected malware",
@@ -58,7 +57,6 @@ def infer_event_type_from_text(text: str) -> str:
     ]):
         return "MALWARE"
 
-    # Data exfiltration style wording
     if any(k in t for k in ["data exfil", "exfiltration", "large outbound transfer"]):
         return "DATA_EXFIL"
 
@@ -82,7 +80,7 @@ def infer_event_type_from_text(text: str) -> str:
     if any(k in t for k in ["xss", "cross-site scripting", "cross site scripting"]):
         return "XSS"
 
-    # LOW SEVERITY / INFO
+    # LOW SEVERITY 
     if "phish" in t:
         return "PHISHING"
 
@@ -91,7 +89,7 @@ def infer_event_type_from_text(text: str) -> str:
 
     return "UNKNOWN"
 
-#  Parsing logs from text
+#  Parsing logs
 
 def parse_logs_from_text(text: str) -> List[LogEntry]:
     
@@ -102,7 +100,6 @@ def parse_logs_from_text(text: str) -> List[LogEntry]:
         if not line or line.startswith("#"):
             continue
 
-        # CSV with commas
         parts = [p.strip() for p in line.split(",")]
         if len(parts) >= 4:
             while len(parts) < 5:
@@ -121,7 +118,6 @@ def parse_logs_from_text(text: str) -> List[LogEntry]:
             ))
             continue
 
-        # Free-text line
         ips = IP_REGEX.findall(line)
         src_ip = ips[0] if len(ips) >= 1 else ""
         dst_ip = ips[1] if len(ips) >= 2 else ""
@@ -153,7 +149,7 @@ def is_external_ip(ip: str) -> bool:
         or ip_obj.is_link_local
     )
 
-#  ML hybrid helper
+#  ML helper
 
 def _apply_ml_hybrid_decision(
     log: LogEntry,
@@ -178,8 +174,7 @@ def _apply_ml_hybrid_decision(
 
     return severity, reason
 
-#  Rule-based scoring (fallback)
-
+#  Rule-based scoring
 def score_log(log: LogEntry) -> ClassifiedLog:
     
     event = log.event_type
@@ -239,12 +234,10 @@ def score_log(log: LogEntry) -> ClassifiedLog:
 
     reason_str = " ".join(reasons)
 
-    # Hybrid step: adjust severity + explanation using UNSW ML model
     severity, reason_str = _apply_ml_hybrid_decision(log, severity, reason_str)
 
     return ClassifiedLog(log=log, severity=severity, reason=reason_str)
 
-#  LLM-based classification
 
 def _prepare_log_for_classification(log: LogEntry) -> LogEntry:
     
@@ -288,7 +281,6 @@ def classify_with_llm(log: LogEntry) -> ClassifiedLog:
 
     user_message = "Classify the following log event:\n\n" + json.dumps(payload, ensure_ascii=False)
 
-    # New-style client (openai>=1.0.0) exposes 'OpenAI'
     if hasattr(openai, "OpenAI"):
         client = openai.OpenAI(api_key=api_key)
         completion = client.chat.completions.create(
@@ -302,7 +294,6 @@ def classify_with_llm(log: LogEntry) -> ClassifiedLog:
         )
         content = completion.choices[0].message.content
     else:
-        # Old-style client – backwards compatible API
         openai.api_key = api_key
         completion = openai.ChatCompletion.create(
             model="gpt-4o-mini",
@@ -358,14 +349,12 @@ def classify_log(log: LogEntry, use_llm: bool = False) -> ClassifiedLog:
             fallback.reason = f"{fallback.reason} (LLM unavailable: {e})"
             return fallback
 
-        # Apply ML hybrid decision on top of LLM output
         new_severity, new_reason = _apply_ml_hybrid_decision(
             result.log, result.severity, result.reason
         )
         return ClassifiedLog(log=result.log, severity=new_severity, reason=new_reason)
 
     else:
-        # Rule-based path already calls _apply_ml_hybrid_decision inside score_log()
         return score_log(prepared)
 
 
@@ -386,3 +375,4 @@ def categorise_logs(logs: List[LogEntry], use_llm: bool = False) -> Dict[str, An
         "summary": summary,
         "classified_logs": classified,
     }
+
